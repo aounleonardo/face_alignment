@@ -29,16 +29,16 @@ class FANPredictor(object):
     @staticmethod
     def get_model(name: str = '2dfan2') -> SimpleNamespace:
         name = name.lower()
-        if name == '2dfan4':
-            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', '2dfan4.pth'),
-                                   config=SimpleNamespace(crop_ratio=0.55, input_size=256, num_modules=4,
-                                                          hg_num_features=256, hg_depth=4, use_avg_pool=True))
-        elif name == '2dfan2':
+        if name == '2dfan2':
             return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', '2dfan2.pth'),
                                    config=SimpleNamespace(crop_ratio=0.55, input_size=256, num_modules=2,
                                                           hg_num_features=256, hg_depth=4, use_avg_pool=False))
+        elif name == '2dfan4':
+            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', '2dfan4.pth'),
+                                   config=SimpleNamespace(crop_ratio=0.55, input_size=256, num_modules=4,
+                                                          hg_num_features=256, hg_depth=4, use_avg_pool=True))
         else:
-            raise ValueError('name must be set to fan4')
+            raise ValueError('name must be set to either 2dfan2 or 2dfan4')
 
     @staticmethod
     def create_config(gamma: float = 1.0, radius: float = 0.1, use_jit: bool = True) -> SimpleNamespace:
@@ -47,7 +47,7 @@ class FANPredictor(object):
     @torch.no_grad()
     def __call__(self, image: np.ndarray, face_boxes: np.ndarray, rgb: bool = True,
                  return_features: bool = False) -> Union[Tuple[np.ndarray, np.ndarray],
-                                                         Tuple[np.ndarray, np.ndarray, Optional[torch.Tensor]]]:
+                                                         Tuple[np.ndarray, np.ndarray, torch.Tensor]]:
         if face_boxes.size > 0:
             if not rgb:
                 image = image[..., ::-1]
@@ -107,7 +107,7 @@ class FANPredictor(object):
             landmarks = np.empty(shape=(0, 68, 2), dtype=np.float32)
             landmark_scores = np.empty(shape=(0, 68), dtype=np.float32)
             if return_features:
-                return landmarks, landmark_scores, None
+                return landmarks, landmark_scores, torch.Tensor([])
             else:
                 return landmarks, landmark_scores
 
