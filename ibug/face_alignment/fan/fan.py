@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import torch
 import torch.nn as nn
@@ -73,9 +74,10 @@ class ConvBlock(nn.Module):
 
 
 class HourGlass(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, name):
         super(HourGlass, self).__init__()
         self.config = config
+        self.name = name
 
         self._generate_network(self.config.hg_depth)
 
@@ -112,6 +114,14 @@ class HourGlass(nn.Module):
 
         low3 = low2
         debug = level == 1
+        if debug:
+            tensor_snapshot = os.path.join("batch_norm_test_resources", f"{self.name}_b3_{level}.pickle")
+            if os.path.exists(tensor_snapshot):
+                with open(tensor_snapshot, "rb") as file:
+                    saved_tensor = pickle.load(file)
+                    print("\n\n>>>>>> Is equal to snapshot?", torch.equal(low3, saved_tensor))
+            with open(tensor_snapshot, "wb") as file:
+                pickle.dump(low3, file)
         low3 = self._modules['b3_' + str(level)](low3, name='b3_' + str(level), debug=debug)  # first difference I see is here, at level 2
 
         up2 = F.interpolate(low3, scale_factor=2, mode='nearest')
@@ -136,7 +146,7 @@ class FAN(nn.Module):
 
         # Hourglasses
         for hg_module in range(self.config.num_modules):
-            self.add_module('m' + str(hg_module), HourGlass(self.config))
+            self.add_module('m' + str(hg_module), HourGlass(self.config, name='m' + str(hg_module)))
             self.add_module('top_m_' + str(hg_module), ConvBlock(self.config.hg_num_features,
                                                                  self.config.hg_num_features))
             self.add_module('conv_last' + str(hg_module), nn.Conv2d(self.config.hg_num_features,
