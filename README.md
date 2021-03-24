@@ -1,25 +1,26 @@
 # ibug.face_alignment
-TODO
+This branch is to show that I am getting differences in my tensor outputs between the stable build and the nightly build
 
 ## Prerequisites
 * [Numpy](https://www.numpy.org/): `$pip3 install numpy`
 * [OpenCV](https://opencv.org/): `$pip3 install opencv-python`
-* [PyTorch](https://pytorch.org/): `$pip3 install torch torchvision`
-* [ibug.face_detection](https://github.com/hhj1897/face_detection) (only needed by the test script): See this repository for details: [https://github.com/hhj1897/face_detection](https://github.com/hhj1897/face_detection).
+* Build pytorch `using conda install pytorch torchvision cudatoolkit=11.1 -c pytorch -c conda-forge` and it should work
+* If you build with `conda install pytorch torchvision cudatoolkit=11.1 -c pytorch-nightly -c conda-forge` instead, it will fail and the results will be clear
 
-## How to Install
-```
-git clone https://github.com/hhj1897/face_alignment.git
-cd face_alignment
-pip install -e .
-```
 
 ## How to Test
-* To test on live video: `python face_alignment_test.py [-i webcam_index]`
-* To test on a video file: `python face_alignment_test.py [-i input_file] [-o output_file]`
+with two different environments env1 and env2, each with a different pytorch version:
+```
+conda activate env1
+python batch_norm_test.py
 
-## How to Use
-TODO
+conda activate env2
+python batch_norm_test.py
+```
+
+Then compare the two out files in [batch_norm_test_resources](batch_norm_test_resources/)
+You can already see with the current one, that there is a difference at the output of "Convblock: b3_1.conv3" 
+
 
 ## References
 \[1\] Bulat, Adrian, and Georgios Tzimiropoulos. "[How far are we from solving the 2d & 3d face alignment problem?(and a dataset of 230,000 3d facial landmarks).](http://openaccess.thecvf.com/content_ICCV_2017/papers/Bulat_How_Far_Are_ICCV_2017_paper.pdf)" In _Proceedings of the IEEE International Conference on Computer Vision_, pp. 1021-1030. 2017.
