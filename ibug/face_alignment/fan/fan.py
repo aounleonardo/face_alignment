@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,11 +14,11 @@ class ConvBlock(nn.Module):
     def __init__(self, in_planes, out_planes):
         super(ConvBlock, self).__init__()
         self.bn1 = nn.BatchNorm2d(in_planes)
-        self.conv1 = conv3x3(in_planes, int(out_planes / 2))
-        self.bn2 = nn.BatchNorm2d(int(out_planes / 2))
-        self.conv2 = conv3x3(int(out_planes / 2), int(out_planes / 4))
-        self.bn3 = nn.BatchNorm2d(int(out_planes / 4))
-        self.conv3 = conv3x3(int(out_planes / 4), int(out_planes / 4))
+        self.conv1 = conv3x3(in_planes, out_planes // 2)
+        self.bn2 = nn.BatchNorm2d(out_planes // 2)
+        self.conv2 = conv3x3(out_planes // 2, out_planes // 4)
+        self.bn3 = nn.BatchNorm2d(out_planes // 4)
+        self.conv3 = conv3x3(out_planes // 4, out_planes // 4)
 
         if in_planes != out_planes:
             self.downsample = nn.Sequential(nn.BatchNorm2d(in_planes), nn.ReLU(True),
@@ -24,25 +26,46 @@ class ConvBlock(nn.Module):
         else:
             self.downsample = None
 
-    def forward(self, x):
+    def forward(self, x, name=None, debug=False):
         residual = x
 
-        out1 = self.bn1(x)
+        out1 = self.bn1(x)  # this line is giving different results
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.bn1 \n x: {x[0,0,0]} \n out1: {out1[0,0,0]} \n\n")
         out1 = F.relu(out1, True)
         out1 = self.conv1(out1)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.conv1 \n x: {x[0,0,0]} \n out1: {out1[0,0,0]} \n\n")
 
         out2 = self.bn2(out1)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.bn2 \n x: {x[0,0,0]} \n out2: {out2[0,0,0]} \n\n")
         out2 = F.relu(out2, True)
         out2 = self.conv2(out2)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.conv2 \n x: {x[0,0,0]} \n out2: {out2[0,0,0]} \n\n")
 
         out3 = self.bn3(out2)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.bn3 \n x: {x[0,0,0]} \n out3: {out3[0,0,0]} \n\n")
         out3 = F.relu(out3, True)
         out3 = self.conv3(out3)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.conv3 \n x: {x[0,0,0]} \n out3: {out3[0,0,0]} \n\n")
 
         out3 = torch.cat((out1, out2, out3), 1)
 
         if self.downsample is not None:
             residual = self.downsample(residual)
+        if debug:
+            with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+                file.write(f"Convblock: {name}.downsample \n x: {x[0,0,0]} \n residual: {residual[0,0,0]} \n\n")
 
         out3 += residual
 
@@ -71,6 +94,7 @@ class HourGlass(nn.Module):
 
     def _forward(self, level, inp):
         up1 = inp
+
         up1 = self._modules['b1_' + str(level)](up1)
 
         if self.config.use_avg_pool:
@@ -78,15 +102,17 @@ class HourGlass(nn.Module):
         else:
             low1 = F.max_pool2d(inp, 2, stride=2)
         low1 = self._modules['b2_' + str(level)](low1)
+        # same up till here
 
         if level > 1:
-            low2 = self._forward(level - 1, low1)
+            low2 = self._forward(level - 1, low1)  # correct at level 2 but wrong at level 3
         else:
             low2 = low1
-            low2 = self._modules['b2_plus_' + str(level)](low2)
+            low2 = self._modules['b2_plus_' + str(level)](low2)  # still the same
 
         low3 = low2
-        low3 = self._modules['b3_' + str(level)](low3)
+        debug = level == 1
+        low3 = self._modules['b3_' + str(level)](low3, name='b3_' + str(level), debug=debug)  # first difference I see is here, at level 2
 
         up2 = F.interpolate(low3, scale_factor=2, mode='nearest')
 

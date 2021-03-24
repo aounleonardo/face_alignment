@@ -17,10 +17,10 @@ class FANPredictor(object):
         if model is None:
             model = FANPredictor.get_model()
         if config is None:
-            config = FANPredictor.create_config()
+            config = FANPredictor.create_config(use_jit=False)
         self.config = SimpleNamespace(**model.config.__dict__, **config.__dict__)
         self.net = FAN(config=self.config).to(self.device)
-        self.net.load_state_dict(torch.load(model.weights, map_location=self.device))
+        self.net.load_state_dict(torch.load(model.weights, map_location=lambda storage, loc: storage))
         self.net.eval()
         if self.config.use_jit:
             self.net = torch.jit.trace(self.net, torch.rand(1, 3, self.config.input_size,
