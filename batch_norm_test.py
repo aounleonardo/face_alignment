@@ -9,6 +9,9 @@ from ibug.face_alignment.utils import plot_landmarks
 
 def main():
 
+    with open(os.path.join("batch_norm_test_resources", torch.__version__ + ".torchconfig"), "w") as file:
+        print(*torch.__config__.show().split("\n"), sep="\n", file=file)
+
     frame = cv2.imread(os.path.join("batch_norm_test_resources", "test_input.jpg"))
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     detections = np.array(
