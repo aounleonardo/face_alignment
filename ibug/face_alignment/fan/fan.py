@@ -125,6 +125,8 @@ class HourGlass(nn.Module):
         low3 = self._modules['b3_' + str(level)](low3, name='b3_' + str(level), debug=debug)  # first difference I see is here, at level 2
 
         up2 = F.interpolate(low3, scale_factor=2, mode='nearest')
+        with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
+            file.write(f"interpolate: \n low3: {low3[0,0,0]} \n up2: {up2[0,0,0]} \n\n")
 
         return up1 + up2
 
