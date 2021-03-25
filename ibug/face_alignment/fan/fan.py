@@ -114,17 +114,25 @@ class HourGlass(nn.Module):
 
         low3 = low2
         debug = level == 1
+        low3 = self._modules['b3_' + str(level)](low3, name='b3_' + str(level), debug=debug)  # first difference I see is here, at level 2
+
         if debug:
-            tensor_snapshot = os.path.join("batch_norm_test_resources", f"{self.name}_b3_{level}.pickle")
+            tensor_snapshot = os.path.join("batch_norm_test_resources", f"{self.name}_{level}_before_interpolate.pickle")
             if os.path.exists(tensor_snapshot):
                 with open(tensor_snapshot, "rb") as file:
                     saved_tensor = pickle.load(file)
-                    print("\n\n>>>>>> Is equal to snapshot?", torch.equal(low3, saved_tensor))
+                    print(f"\n\n>>>>>> Is equal to snapshot? {tensor_snapshot}", torch.equal(low3, saved_tensor))
             with open(tensor_snapshot, "wb") as file:
                 pickle.dump(low3, file)
-        low3 = self._modules['b3_' + str(level)](low3, name='b3_' + str(level), debug=debug)  # first difference I see is here, at level 2
-
         up2 = F.interpolate(low3, scale_factor=2, mode='nearest')
+        if debug:
+            tensor_snapshot = os.path.join("batch_norm_test_resources", f"{self.name}_{level}_after_interpolate.pickle")
+            if os.path.exists(tensor_snapshot):
+                with open(tensor_snapshot, "rb") as file:
+                    saved_tensor = pickle.load(file)
+                    print(f"\n\n>>>>>> Is equal to snapshot? {tensor_snapshot}", torch.equal(up2, saved_tensor))
+            with open(tensor_snapshot, "wb") as file:
+                pickle.dump(up2, file)
         with open(os.path.join("batch_norm_test_resources", torch.__version__ + "_log.out"), "a") as file:
             file.write(f"interpolate: \n low3: {low3[0,0,0]} \n up2: {up2[0,0,0]} \n\n")
 
