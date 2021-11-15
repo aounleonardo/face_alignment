@@ -37,8 +37,12 @@ class FANPredictor(object):
             return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', '2dfan4.pth'),
                                    config=SimpleNamespace(crop_ratio=0.55, input_size=256, num_modules=4,
                                                           hg_num_features=256, hg_depth=4, use_avg_pool=True))
+        elif name == '2dfan2_alt':
+            return SimpleNamespace(weights=os.path.join(os.path.dirname(__file__), 'weights', '2dfan2_alt.pth'),
+                                   config=SimpleNamespace(crop_ratio=0.55, input_size=256, num_modules=2,
+                                                          hg_num_features=256, hg_depth=4, use_avg_pool=False))
         else:
-            raise ValueError('name must be set to either 2dfan2 or 2dfan4')
+            raise ValueError('name must be set to either 2dfan2, 2dfan4, or 2dfan2_alt')
 
     @staticmethod
     def create_config(gamma: float = 1.0, radius: float = 0.1, use_jit: bool = True) -> SimpleNamespace:
@@ -111,7 +115,7 @@ class FANPredictor(object):
             else:
                 return landmarks, landmark_scores
 
-    def _decode(self, heatmaps: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _decode(self, heatmaps: torch.Tensor) -> Tuple[np.ndarray, np.ndarray]:
         heatmaps = heatmaps.contiguous()
         scores = heatmaps.max(dim=3)[0].max(dim=2)[0]
 
@@ -120,7 +124,7 @@ class FANPredictor(object):
             # Find peaks in all heatmaps
             m = heatmaps.view(heatmaps.shape[0] * heatmaps.shape[1], -1).argmax(1)
             all_peaks = torch.cat(
-                [(m // heatmaps.shape[3]).view(-1, 1), (m % heatmaps.shape[3]).view(-1, 1)], dim=1
+                [(m / heatmaps.shape[3]).trunc().view(-1, 1), (m % heatmaps.shape[3]).view(-1, 1)], dim=1
             ).reshape((heatmaps.shape[0], heatmaps.shape[1], 1, 1, 2)).repeat(
                 1, 1, heatmaps.shape[2], heatmaps.shape[3], 1).float()
 
@@ -143,7 +147,7 @@ class FANPredictor(object):
         heatmaps = heatmaps.clamp_min(0.0)
         if self.config.gamma != 1.0:
             heatmaps = heatmaps.pow(self.config.gamma)
-        m00s = heatmaps.sum(dim=(2, 3))
+        m00s = heatmaps.sum(dim=(2, 3)).clamp_min(torch.finfo(heatmaps.dtype).eps)
         xs = heatmaps.sum(dim=2).mul(x_indices).sum(dim=2).div(m00s)
         ys = heatmaps.sum(dim=3).mul(y_indices).sum(dim=2).div(m00s)
 
