@@ -18,6 +18,14 @@ pip install -e .
 * To test on live video: `python face_alignment_test.py [-i webcam_index]`
 * To test on a video file: `python face_alignment_test.py [-i input_file] [-o output_file]`
 
+### Docker
+You can run a containerized demo using Docker. It will install the needed dependencies and allow you to test the FANPredictor on a sample image.
+
+`docker build -t ibug-face_alignment -f ./demo/Dockerfile . && docker run -it --rm ibug-face_alignment`
+You will automatically enter a tmux session and run demo.py script. If you don't want this, you can either kill it immediately or provide "--entrypoint /bin/bash" to the docker run command.
+
+Please install Docker using [the official instructions](https://docs.docker.com/get-docker/)
+
 ## How to Use
 ```python
 # Import the libraries
