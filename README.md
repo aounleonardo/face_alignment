@@ -21,10 +21,12 @@ pip install -e .
 ### Docker
 You can run a containerized demo using Docker. It will install the needed dependencies and allow you to test the FANPredictor on a sample image.
 
-`docker build -t ibug-face_alignment -f ./demo/Dockerfile . && docker run -it --rm ibug-face_alignment`
+Either run `bash demo/run.sh` or `docker build -t ibug-face_alignment -f ./demo/Dockerfile . && docker run -it --rm ibug-face_alignment`
 You will automatically enter a tmux session and run demo.py script. If you don't want this, you can either kill it immediately or provide "--entrypoint /bin/bash" to the docker run command.
 
 Please install Docker using [the official instructions](https://docs.docker.com/get-docker/)
+
+**NOTE** If you're running on Windows, running the container might fail, and you would need to replace `docker run` with `winpty docker run`. I also recommend running the commands from a Unix-shell, for example Git Bash, or Docker Quickstart Terminal. This is taken care of if you use the shell script.
 
 ## How to Use
 ```python
