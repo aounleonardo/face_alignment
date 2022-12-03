@@ -21,8 +21,8 @@ pip install -e .
 ### Docker
 You can run a containerized demo using Docker. It will install the needed dependencies and allow you to test the FANPredictor on a sample image.
 
-Either run `bash demo/run.sh` or `docker build -t ibug-face_alignment -f ./demo/Dockerfile . && docker run -it --rm ibug-face_alignment`
-You will automatically enter a tmux session and run demo.py script. If you don't want this, you can either kill it immediately or provide "--entrypoint /bin/bash" to the docker run command.
+Either run `bash demo/run.sh` or `docker build -t ibug-face_alignment -f ./demo/Dockerfile . && docker run -it --rm -p 8888:8888 ibug-face_alignment`
+You will automatically enter a tmux session and open jupter-lab, you can then open the notebook.ipynb. If you don't want this, you can either kill it immediately or provide "--entrypoint /bin/bash" to the docker run command.
 
 Please install Docker using [the official instructions](https://docs.docker.com/get-docker/)
 

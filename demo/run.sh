@@ -13,4 +13,4 @@ then
 fi
 
 echo $prefix
-$prefix docker run -it --rm ibug-face_alignment
+$prefix docker run -it --rm -p 8888:8888 ibug-face_alignment

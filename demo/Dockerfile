@@ -19,4 +19,12 @@ RUN pip install -e .
 
 COPY demo/main.py .
 
-CMD ["tmux", "new-session", "/bin/bash", ";", "new-window", "python -i main.py"]
+RUN conda install jupyterlab matplotlib ipywidgets
+
+COPY demo/notebook.ipynb .
+
+CMD [ \
+    "tmux", \ 
+    "new-session", "/bin/bash", ";", \
+    "new-window", "jupyter-lab --ip=0.0.0.0 --no-browser --allow-root" \
+]
