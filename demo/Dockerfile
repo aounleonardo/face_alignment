@@ -17,6 +17,10 @@ COPY ../setup.py .
 COPY ../ibug ibug 
 RUN pip install -e .
 
+RUN git clone https://github.com/ibug-group/face_detection.git && \
+    pip install -e face_detection && \
+    cp -r face_detection ibug/
+
 COPY demo/main.py .
 
 RUN conda install jupyterlab matplotlib ipywidgets
